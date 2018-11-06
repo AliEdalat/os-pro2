@@ -15,7 +15,12 @@ public:
 private:
 	std::vector<int> proc_ids;
 	std::vector<int*> pipes;
+	std::vector<std::string*> files;
+	int step;
+	int start_file;
 	int prc_cnt;
 	std::string dir;
+
+	void extract_files_data_in_dir();
 };
 #endif
