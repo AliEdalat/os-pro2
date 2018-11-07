@@ -5,20 +5,60 @@
 #include <fstream>
 #include <streambuf>
 
-LoadBalancer::LoadBalancer(int prc_cnt_input, std::string dir_input)
+LoadBalancer::LoadBalancer(std::string input)
 {
-	prc_cnt = prc_cnt_input;
-	dir = dir_input;
+	extract_input_data(input);
+	// prc_cnt = prc_cnt_input;
+	// dir = dir_input;
 	step = 1;
 	start_file = 0;
 	for (int i = 0; i < prc_cnt; ++i)
 	{
+		workers.push_back(new Worker());
 		pipes.push_back(new int[2]);
 		if (pipe(pipes[i])==-1)
 		{ 
         	std::cout << " Pipe Failed!" << std::endl; 
         	throw 1;
 		}
+	}
+}
+
+void LoadBalancer::extract_input_data(std::string line)
+{
+	line += "-";
+	int state = 0;
+	std::string subject;
+	std::string value;
+	for (int i = 0; i < line.length(); ++i)
+	{
+		if (line[i] == '=')
+		{
+			state = 1;
+			value = std::string();
+			continue;
+		}
+
+		if (line[i] == '-')
+		{
+			if (subject == "prc_cnt")
+				prc_cnt = stoi(value);
+			else if (subject == "dir")
+				dir = value;
+			else if (value != "descend" || value != "ascend")
+				search_model.set(subject, value);
+			else
+				sort_model.set(subject, value);
+			//std::cout << "(" << subject << "," << value << ")" << std::endl;
+			state = 0;
+			subject = std::string();
+			continue;
+		}
+
+		if (state == 0)
+			subject.push_back(line[i]);
+		else if (state == 1)
+			value.push_back(line[i]);
 	}
 }
 
@@ -35,7 +75,7 @@ void LoadBalancer::extract_files_data_in_dir()
 			if (files[files.size()-1]->at(dir.length()+1) == '.')
 			{
 				files.pop_back();
-				std::cout << "poped" << std::endl;
+				//std::cout << "poped" << std::endl;
 			}
 		}
 		closedir (dir_pointer);
@@ -43,24 +83,45 @@ void LoadBalancer::extract_files_data_in_dir()
 	/* could not open directory */
 		throw 1;
 	}
+	step = (files.size() > prc_cnt) ? ((files.size() % 2 == 0) ? (files.size() / prc_cnt) : (files.size() / prc_cnt) + 1) : 1;
+	for (int i = 0; i < prc_cnt; ++i)
+	{
+		if (start_file < files.size()){
+			starts.push_back(start_file);
+			start_file += step;
+		}else{
+			starts.push_back(-1);
+		}
+	}
+	//std::cout << "step : " << step << std::endl;
 }
 
 void LoadBalancer::run()
 {
 	extract_files_data_in_dir();
+	int root = getpid();
 	for (int i = 0; i < prc_cnt; ++i)
 	{
 		int pid;
 		if ((pid = fork()) > 0){
 			proc_ids.push_back(pid);
-			std::ifstream t(*files[0]);
-			std::string str((std::istreambuf_iterator<char>(t)),
-                 std::istreambuf_iterator<char>());
-			//std::string s = "forgeeks.org";
-			close(pipes[i][0]);  // Close reading end of first pipe
-			// Write input string and close writing end of first 
-			// pipe. 
-			write(pipes[i][1], str.c_str(), str.length());
+			// Close reading end of first pipe
+			std::cout << pid << std::endl;
+			std::cout << "start : " << starts[i] << std::endl;
+			std::string res;
+			for (int j = starts[i]; j < step+starts[i]; ++j)
+			{
+				std::ifstream t(*files[j]);
+				std::string str((std::istreambuf_iterator<char>(t)),
+	                 std::istreambuf_iterator<char>());
+				std::string temp (&str[26]);
+				res += temp + "\n";
+				//std::string s = "forgeeks.org";
+				// Write input string and close writing end of first 
+				// pipe. 
+			}
+			close(pipes[i][0]);
+			write(pipes[i][1], res.c_str(), res.length());
 			close(pipes[i][1]);
 			// wait(NULL);
 		}else{
@@ -70,10 +131,22 @@ void LoadBalancer::run()
 			concat_str.resize(5000);
 			int val = read(pipes[i][0], &concat_str[0], 5000);
 			concat_str[val] = '\0';
-			std::cout << std::string(concat_str) << std::endl;
+			std::string input = std::string(concat_str);
+			//std::cout << input << std::endl;
+			workers[i]->set_input(input);
+			workers[i]->exec(search_model);
 			exit(0);
 		}
 	}
+
+	if (getpid() == root)
+		while(1)
+		{
+			std::string temp;
+			std::cin >> temp;
+			if (temp == "quit")
+				break;
+		}
 }
 
 // char fixed_str[] = "forgeeks.org"; 

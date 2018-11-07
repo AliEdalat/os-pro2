@@ -5,22 +5,30 @@
 #include <string>
 #include <vector>
 
+#include "worker.h"
+#include "search_model.h"
+#include "sort_model.h"
+
 class LoadBalancer
 {
 public:
-	LoadBalancer(int prc_cnt_input, std::string dir_input);
+	LoadBalancer(std::string input);
 	void run();
-	// ~LoadBalancer();
 
 private:
 	std::vector<int> proc_ids;
 	std::vector<int*> pipes;
 	std::vector<std::string*> files;
+	std::vector<int> starts;
+	std::vector<Worker*> workers;
 	int step;
 	int start_file;
 	int prc_cnt;
 	std::string dir;
+	SearchModel search_model;
+	SortModel sort_model;
 
 	void extract_files_data_in_dir();
+	void extract_input_data(std::string input);
 };
 #endif
