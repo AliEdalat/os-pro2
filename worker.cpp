@@ -27,43 +27,40 @@ void Worker::exec(SearchModel& search_model)
     std::map<std::string, std::string>::iterator it = map.begin();
     
     try{
-	    for (int i = 0; i < laptops.size(); ++i)
-	    {
-	    	// std::cout << it->first << "," << it->second << std::endl;
-	    	// std::cout << getpid() <<"	" << laptops[i]->brand << std::endl;
-	    	int add = 1;
-	    	for (; it != map.end(); ++it)
-	    	{
-	    		if (it->first == "brand")
-	    			if(laptops[i]->brand != it->second){
-	    				add = 0;
-	    				break;
+    	// std::cout << it->first << "," << it->second << std::endl;
+    	// std::cout << getpid() <<"	" << laptops[i]->brand << std::endl;
+    	for (; it != map.end(); ++it)
+    	{
+    		if (it->first == "brand")
+    			for (int i = 0; i < laptops.size(); ++i){
+	    			if(laptops[i]->brand == it->second){
+	    				selected_laptops.push_back(laptops[i]);
 	    			}
-	    		else if (it->first == "model")
-	    			if(laptops[i]->model != it->second){
-	    				add = 0;
-	    				break;
-	    			}
-	    		else if (it->first == "hdd")
-	    			if(laptops[i]->hdd != stoi(it->second)){
-	    				add = 0;
-	    				break;
-	    			}
-	    		else if (it->first == "ram")
-	    			if(laptops[i]->ram != stoi(it->second)){
-	    				add = 0;
-	    				break;
-	    			}
-	    		else if (it->first == "price")
-	    			if(laptops[i]->price != stoi(it->second)){
-	    				add = 0;
-	    				break;
-	    			}
-	    	}
-	    	std::cout << getpid() << add << std::endl;
-	    	if (add)
-	    		selected_laptops.push_back(laptops[i]);
-	    }
+	    		}
+    		// else if (it->first == "model")
+    		// 	if(laptops[i]->model != it->second){
+    		// 		add = 0;
+    		// 		break;
+    		// 	}
+    		// else if (it->first == "hdd")
+    		// 	if(laptops[i]->hdd != stoi(it->second)){
+    		// 		add = 0;
+    		// 		break;
+    		// 	}
+    		// else if (it->first == "ram")
+    		// 	if(laptops[i]->ram != stoi(it->second)){
+    		// 		add = 0;
+    		// 		break;
+    		// 	}
+    		// else if (it->first == "price")
+    		// 	if(laptops[i]->price != stoi(it->second)){
+    		// 		add = 0;
+    		// 		break;
+    		// 	}
+    	}
+    	// std::cout << getpid() << add << std::endl;
+    	// if (add)
+    	// 	selected_laptops.push_back(laptops[i]);
 	}
 	catch(...){
 		std::cout << "search ???" << std::endl;

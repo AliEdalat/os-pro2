@@ -83,7 +83,7 @@ void LoadBalancer::extract_files_data_in_dir()
 	/* could not open directory */
 		throw 1;
 	}
-	step = (files.size() > prc_cnt) ? ((files.size() % 2 == 0) ? (files.size() / prc_cnt) : (files.size() / prc_cnt) + 1) : 1;
+	step = (files.size() > prc_cnt) ? (files.size() / prc_cnt) : 1;
 	for (int i = 0; i < prc_cnt; ++i)
 	{
 		if (start_file < files.size()){
@@ -109,6 +109,10 @@ void LoadBalancer::run()
 			std::cout << pid << std::endl;
 			std::cout << "start : " << starts[i] << std::endl;
 			std::string res;
+			if (files.size() % prc_cnt > 0 && (files.size() - 1 - starts[i]) > 0 && (files.size() - 1 - starts[i]) <= step)
+			{
+				step += files.size() - 1 - starts[i];
+			}
 			for (int j = starts[i]; j < step+starts[i]; ++j)
 			{
 				std::ifstream t(*files[j]);
