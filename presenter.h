@@ -5,7 +5,7 @@
 #include <vector>
 #include "sort_model.h"
 
-struct laptop
+struct presenter_laptop
 {
 	std::string brand;
 	std::string model;
@@ -19,10 +19,10 @@ class Presenter
 public:
 	Presenter(){}
 	void set_input(std::string input);
-	void present();
+	void present(SortModel sort_model);
 
 private:
-	std::vector<laptop*> laptops;
+	std::vector<presenter_laptop*> laptops;
 	std::string file;
 
 	void extract_items(std::string line);

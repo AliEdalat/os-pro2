@@ -93,7 +93,7 @@ void LoadBalancer::extract_files_data_in_dir()
 	/* print all the files and directories within directory */
 		while ((ent = readdir (dir_pointer)) != NULL) {
 			files.push_back(new std::string(dir + "/" + std::string(ent->d_name)));
-			std::cout<<*files[files.size()-1]<<std::endl;
+			//std::cout<<*files[files.size()-1]<<std::endl;
 			if (files[files.size()-1]->at(dir.length()+1) == '.')
 			{
 				files.pop_back();
@@ -128,8 +128,8 @@ void LoadBalancer::run()
 		if ((pid = fork()) > 0){
 			proc_ids.push_back(pid);
 			// Close reading end of first pipe
-			std::cout << pid << std::endl;
-			std::cout << "start : " << starts[i] << std::endl;
+			// std::cout << pid << std::endl;
+			// std::cout << "start : " << starts[i] << std::endl;
 			std::string res;
 			if (files.size() % prc_cnt > 0 && (files.size() - 1 - starts[i]) > 0 && (files.size() - 1 - starts[i]) <= step)
 			{
@@ -177,17 +177,19 @@ void LoadBalancer::run()
 		        int val = read(fd1, str1, 5000);
 		        str1[val] = '\0';
 		        // Print the read string and close 
-		        printf("User%d: %s\n", i,str1);
-		        if (val > 0)
+		        // printf("User%d: %s\n", i,str1);
+		        if (val > 0 && presented[i] == false)
 		        {
 		        	presented[i] = true;
 		        	end++;
+		        	presenter.set_input(std::string(str1));
 		        }
 		        close(fd1);
 			}
 			if (end == prc_cnt)
 				break;
 		}
+		presenter.present(sort_model);
 		exit(0); 
 	}
 

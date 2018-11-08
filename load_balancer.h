@@ -8,6 +8,7 @@
 #include "worker.h"
 #include "search_model.h"
 #include "sort_model.h"
+#include "presenter.h"
 
 class LoadBalancer
 {
@@ -29,6 +30,7 @@ private:
 	std::string dir;
 	SearchModel search_model;
 	SortModel sort_model;
+	Presenter presenter;
 
 	void extract_files_data_in_dir();
 	void extract_input_data(std::string input);

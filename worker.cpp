@@ -104,7 +104,7 @@ void Worker::exec(SearchModel& search_model)
 	catch(...){
 		std::cout << "search ???" << std::endl;
 	}
-	std::cout << "find : " << selected_laptops.size() << std::endl;
+	// std::cout << "find : " << selected_laptops.size() << std::endl;
 
 }
 
@@ -136,12 +136,9 @@ void Worker::extract_items(std::string line)
 		else if (state > 1)
 			temp.push_back(line[i]);
 	}
-	/*std::cout << "extract : " << laptops[laptops.size()-1]->brand << " "
-			<< laptops[laptops.size()-1]->model << " " << laptops[laptops.size()-1]->ram
-			<< " " << laptops[laptops.size()-1]->hdd << " " << laptops[laptops.size()-1]->price << std::endl;*/
+
 	if (laptops[laptops.size()-1]->brand == "" || laptops[laptops.size()-1]->model == "")
 	{
 	 	laptops.pop_back();
-	 	//std::cout << "poped" << std::endl;
 	} 
 }
