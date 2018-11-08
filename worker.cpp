@@ -2,15 +2,19 @@
 #include <sstream>
 #include <iostream>
 #include <unistd.h>
+#include <fcntl.h>
+
 
 Worker::Worker(std::string input)
 {
 	file = input;
 }
 
-void Worker::set_input(std::string input)
+void Worker::set_input(std::string input, std::string fifo)
 {
 	file = input;
+	fifo_name = fifo;
+	fd = fopen(fifo_name.c_str(), "w"); 
 }
 
 void Worker::exec(SearchModel& search_model)
@@ -26,41 +30,76 @@ void Worker::exec(SearchModel& search_model)
     std::map<std::string, std::string> map = search_model.get();
     std::map<std::string, std::string>::iterator it = map.begin();
     
-    try{
-    	// std::cout << it->first << "," << it->second << std::endl;
-    	// std::cout << getpid() <<"	" << laptops[i]->brand << std::endl;
-    	for (; it != map.end(); ++it)
-    	{
-    		if (it->first == "brand")
-    			for (int i = 0; i < laptops.size(); ++i){
-	    			if(laptops[i]->brand == it->second){
-	    				selected_laptops.push_back(laptops[i]);
+    try{ 	
+    	for (int i = 0; i < laptops.size(); ++i){
+	    	bool selecte = true;
+	    	for (std::map<std::string, std::string>::iterator it = map.begin(); it != map.end(); ++it)
+	    	{
+	    		// std::cout << it->first << std::endl;
+	    		if (it->first == "brand"){
+	    			if(laptops[i]->brand == it->second && selecte){
+	    				// std::cout << "match" << std::endl;
+	    				selecte = true;
+	    			}else{
+	    				// std::cout << "not match" << std::endl;
+	    				selecte = false;
+	    				break;
+	    			}
+		    	}
+	    		else if (it->first == "model"){
+	    			if(laptops[i]->brand == it->second && selecte){
+	    				// std::cout << "match" << std::endl;
+	    				selecte = true;
+	    			}else{
+	    				// std::cout << "not match" << std::endl;
+	    				selecte = false;
+	    				break;
 	    			}
 	    		}
-    		// else if (it->first == "model")
-    		// 	if(laptops[i]->model != it->second){
-    		// 		add = 0;
-    		// 		break;
-    		// 	}
-    		// else if (it->first == "hdd")
-    		// 	if(laptops[i]->hdd != stoi(it->second)){
-    		// 		add = 0;
-    		// 		break;
-    		// 	}
-    		// else if (it->first == "ram")
-    		// 	if(laptops[i]->ram != stoi(it->second)){
-    		// 		add = 0;
-    		// 		break;
-    		// 	}
-    		// else if (it->first == "price")
-    		// 	if(laptops[i]->price != stoi(it->second)){
-    		// 		add = 0;
-    		// 		break;
-    		// 	}
-    	}
-    	// std::cout << getpid() << add << std::endl;
-    	// if (add)
-    	// 	selected_laptops.push_back(laptops[i]);
+	    		else if (it->first == "hdd"){
+	    			if(laptops[i]->brand == it->second && selecte){
+	    				// std::cout << "match" << std::endl;
+	    				selecte = true;
+	    			}else{
+	    				// std::cout << "not match" << std::endl;
+	    				selecte = false;
+	    				break;
+	    			}
+	    		}
+	    		else if (it->first == "ram"){
+	    			if(laptops[i]->brand == it->second && selecte){
+	    				// std::cout << "match" << std::endl;
+	    				selecte = true;
+	    			}else{
+	    				// std::cout << "not match" << std::endl;
+	    				selecte = false;
+	    				break;
+	    			}
+	    		}
+	    		else if (it->first == "price"){
+	    			if(laptops[i]->brand == it->second && selecte){
+	    				// std::cout << "match" << std::endl;
+	    				selecte = true;
+	    			}else{
+	    				// std::cout << "not match" << std::endl;
+	    				selecte = false;
+	    				break;
+	    			}
+	    		}
+	    	}
+	    	if (selecte == false){
+	    		// std::cout << "continue" << std::endl;
+	    		continue;
+	    	}
+	    	// std::cout << "selecte" << std::endl;
+	    	selected_laptops.push_back(laptops[i]);
+	    }
+	    for (int i = 0; i < selected_laptops.size(); ++i)
+	    {
+	    	fprintf(fd, "%s %s %d %d %d\n", selected_laptops[i]->brand.c_str(), selected_laptops[i]->model.c_str(),
+	    		selected_laptops[i]->ram, selected_laptops[i]->hdd, selected_laptops[i]->price);
+	    }
+        fclose(fd); 
 	}
 	catch(...){
 		std::cout << "search ???" << std::endl;

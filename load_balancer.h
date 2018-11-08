@@ -13,11 +13,13 @@ class LoadBalancer
 {
 public:
 	LoadBalancer(std::string input);
+	~LoadBalancer();
 	void run();
 
 private:
 	std::vector<int> proc_ids;
 	std::vector<int*> pipes;
+	std::vector<std::string> fifos;
 	std::vector<std::string*> files;
 	std::vector<int> starts;
 	std::vector<Worker*> workers;

@@ -1,6 +1,8 @@
 #include "load_balancer.h"
 #include <iostream>
 #include <sys/wait.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <dirent.h>
 #include <fstream>
 #include <streambuf>
@@ -12,8 +14,18 @@ LoadBalancer::LoadBalancer(std::string input)
 	// dir = dir_input;
 	step = 1;
 	start_file = 0;
+	std::string path = "fifos/fifo";
+	mkdir("fifos", S_IRWXU|S_IRWXG|S_IROTH);
 	for (int i = 0; i < prc_cnt; ++i)
 	{
+		FILE* fp;
+		if ((fp = fopen((path + std::to_string(i)).c_str(), "ab+")) == NULL){
+			std::cout << " Fifo Failed!" << std::endl; 
+        	throw 1;	
+		}
+		fclose(fp);
+		mkfifo((path + std::to_string(i)).c_str(), 0666);
+		fifos.push_back(path + std::to_string(i));
 		workers.push_back(new Worker());
 		pipes.push_back(new int[2]);
 		if (pipe(pipes[i])==-1)
@@ -22,6 +34,16 @@ LoadBalancer::LoadBalancer(std::string input)
         	throw 1;
 		}
 	}
+}
+
+LoadBalancer::~LoadBalancer()
+{
+	std::string path = "fifos/fifo";
+	for (int i = 0; i < prc_cnt; ++i)
+	{
+		unlink((path + std::to_string(i)).c_str());
+	}
+	rmdir("fifos");
 }
 
 void LoadBalancer::extract_input_data(std::string line)
@@ -45,7 +67,7 @@ void LoadBalancer::extract_input_data(std::string line)
 				prc_cnt = stoi(value);
 			else if (subject == "dir")
 				dir = value;
-			else if (value != "descend" || value != "ascend")
+			else if (value != "descend" && value != "ascend")
 				search_model.set(subject, value);
 			else
 				sort_model.set(subject, value);
@@ -137,10 +159,36 @@ void LoadBalancer::run()
 			concat_str[val] = '\0';
 			std::string input = std::string(concat_str);
 			//std::cout << input << std::endl;
-			workers[i]->set_input(input);
+			workers[i]->set_input(input, fifos[i]);
 			workers[i]->exec(search_model);
 			exit(0);
 		}
+	}
+	std::vector<bool> presented(prc_cnt,false);
+	if (fork() == 0)
+	{
+		int end = 0;
+		while(true)
+		{
+			for (int i = 0; i < prc_cnt; ++i)
+			{
+				char str1[5000];
+				int fd1 = open(fifos[i].c_str(),O_RDONLY); 
+		        int val = read(fd1, str1, 5000);
+		        str1[val] = '\0';
+		        // Print the read string and close 
+		        printf("User%d: %s\n", i,str1);
+		        if (val > 0)
+		        {
+		        	presented[i] = true;
+		        	end++;
+		        }
+		        close(fd1);
+			}
+			if (end == prc_cnt)
+				break;
+		}
+		exit(0); 
 	}
 
 	if (getpid() == root)
