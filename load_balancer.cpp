@@ -3,13 +3,18 @@
 #include <sys/wait.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <signal.h>
 #include <dirent.h>
 #include <fstream>
 #include <streambuf>
 
+#define presenter_exe "main_presenter"
+#define worker_exe "main_worker"
+
 LoadBalancer::LoadBalancer(std::string input)
 {
 	extract_input_data(input);
+	file = input;
 	// prc_cnt = prc_cnt_input;
 	// dir = dir_input;
 	step = 1;
@@ -44,6 +49,11 @@ LoadBalancer::~LoadBalancer()
 		unlink((path + std::to_string(i)).c_str());
 	}
 	rmdir("fifos");
+	for (int i = 0; i < prc_cnt; ++i)
+	{
+		kill(proc_ids[i], SIGKILL);
+	}
+	kill(presenter_pid, SIGKILL);
 }
 
 void LoadBalancer::extract_input_data(std::string line)
@@ -124,6 +134,7 @@ void LoadBalancer::run()
 	int root = getpid();
 	for (int i = 0; i < prc_cnt; ++i)
 	{
+		bool head = false;
 		int pid;
 		if ((pid = fork()) > 0){
 			proc_ids.push_back(pid);
@@ -141,56 +152,39 @@ void LoadBalancer::run()
 				std::string str((std::istreambuf_iterator<char>(t)),
 	                 std::istreambuf_iterator<char>());
 				std::string temp (&str[26]);
-				res += temp + "\n";
+				res += ((head == false) ? str : temp) + "\n";
+				if (head == false)
+					head = true;
 				//std::string s = "forgeeks.org";
 				// Write input string and close writing end of first 
 				// pipe. 
 			}
+			std::cout << res << std::endl;
 			close(pipes[i][0]);
 			write(pipes[i][1], res.c_str(), res.length());
 			close(pipes[i][1]);
 			// wait(NULL);
 		}else{
-			close(pipes[i][1]);  // Close writing end of first pipe 
-			// Read a string using first pipe 
-			std::string concat_str;
-			concat_str.resize(5000);
-			int val = read(pipes[i][0], &concat_str[0], 5000);
-			concat_str[val] = '\0';
-			std::string input = std::string(concat_str);
-			//std::cout << input << std::endl;
-			workers[i]->set_input(input, fifos[i]);
-			workers[i]->exec(search_model);
-			exit(0);
+			std::string a = std::to_string(pipes[i][0]);
+			std::string b = std::to_string(pipes[i][1]);
+			char* end = nullptr;
+			char* argv_worker [] = {(char*)worker_exe,(char*)(a.c_str()),(char*)(b.c_str()),
+					(char*)(fifos[i].c_str()),(char*)(file.c_str()),end};
+			execv("main_worker", argv_worker);
 		}
 	}
-	std::vector<bool> presented(prc_cnt,false);
-	if (fork() == 0)
+
+	if ((presenter_pid = fork()) == 0)
 	{
-		int end = 0;
-		while(true)
-		{
-			for (int i = 0; i < prc_cnt; ++i)
-			{
-				char str1[5000];
-				int fd1 = open(fifos[i].c_str(),O_RDONLY); 
-		        int val = read(fd1, str1, 5000);
-		        str1[val] = '\0';
-		        // Print the read string and close 
-		        // printf("User%d: %s\n", i,str1);
-		        if (val > 0 && presented[i] == false)
-		        {
-		        	presented[i] = true;
-		        	end++;
-		        	presenter.set_input(std::string(str1));
-		        }
-		        close(fd1);
-			}
-			if (end == prc_cnt)
-				break;
-		}
-		presenter.present(sort_model);
-		exit(0); 
+		std::string a = std::to_string(prc_cnt);
+		std::vector<char*> argv_present;
+		argv_present.push_back((char*)presenter_exe);
+		argv_present.push_back((char*)(a.c_str()));
+		for (int i = 0; i < prc_cnt; ++i)
+			argv_present.push_back((char*)(fifos[i].c_str()));
+		argv_present.push_back((char*)(file.c_str()));
+		argv_present.push_back((char*)(nullptr));
+		execv("main_presenter", &argv_present[0]);
 	}
 
 	if (getpid() == root)
@@ -202,63 +196,3 @@ void LoadBalancer::run()
 				break;
 		}
 }
-
-// char fixed_str[] = "forgeeks.org"; 
-//     char input_str[100]; 
-//     pid_t p; 
-  
-//     if (pipe(fd1)==-1) 
-//     { 
-//         fprintf(stderr, "Pipe Failed" ); 
-//         return 1; 
-//     } 
-//     if (pipe(fd2)==-1) 
-//     { 
-//         fprintf(stderr, "Pipe Failed" ); 
-//         return 1; 
-//     } 
-  
-//     scanf("%s", input_str); 
-//     p = fork(); 
-  
-//     if (p < 0) 
-//     { 
-//         fprintf(stderr, "fork Failed" ); 
-//         return 1; 
-//     } 
-  
-//     // Parent process 
-//     else if (p > 0) 
-//     { 
-//         char concat_str[100]; 
-  
-//         close(fd1[0]);  // Close reading end of first pipe 
-  
-//         // Write input string and close writing end of first 
-//         // pipe. 
-//         write(fd1[1], input_str, strlen(input_str)+1); 
-//         close(fd1[1]); 
-  
-//         // Wait for child to send a string 
-//         wait(NULL); 
-  
-//         close(fd2[1]); // Close writing end of second pipe 
-  
-//         // Read string from child, print it and close 
-//         // reading end. 
-//         read(fd2[0], concat_str, 100); 
-//         printf("Concatenated string %s\n", concat_str); 
-//         close(fd2[0]); 
-//     } 
-  
-//     // child process 
-//     else
-//     { 
-//         close(fd1[1]);  // Close writing end of first pipe 
-  
-//         // Read a string using first pipe 
-//         char concat_str[100]; 
-//         read(fd1[0], concat_str, 100);
-//         exit(0); 
-//     } 
-

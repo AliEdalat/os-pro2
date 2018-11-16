@@ -29,6 +29,7 @@ void Presenter::present(SortModel sort_model)
 	{
 		if (it->first == "hdd"){
 			if(it->second == "descend"){
+				std::cout << "price descend!!" << std::endl;
 				std::sort(laptops.begin(), laptops.end(), descend_hdd);
 			}else{
 				std::sort(laptops.begin(), laptops.end(), ascend_hdd);

@@ -19,10 +19,10 @@ void Worker::set_input(std::string input, std::string fifo)
 
 void Worker::exec(SearchModel& search_model)
 {
-	std::istringstream f (file);
+	std::istringstream f (&file[26]);
     std::string line;    
     while (std::getline(f, line)) {
-        //std::cout << line << std::endl;
+        // std::cout << line << std::endl;
         if (line != "\n")
         	extract_items(line);
     }
@@ -47,7 +47,7 @@ void Worker::exec(SearchModel& search_model)
 	    			}
 		    	}
 	    		else if (it->first == "model"){
-	    			if(laptops[i]->brand == it->second && selecte){
+	    			if(laptops[i]->model == it->second && selecte){
 	    				// std::cout << "match" << std::endl;
 	    				selecte = true;
 	    			}else{
@@ -57,7 +57,7 @@ void Worker::exec(SearchModel& search_model)
 	    			}
 	    		}
 	    		else if (it->first == "hdd"){
-	    			if(laptops[i]->brand == it->second && selecte){
+	    			if(laptops[i]->hdd == atoi(it->second.c_str()) && selecte){
 	    				// std::cout << "match" << std::endl;
 	    				selecte = true;
 	    			}else{
@@ -67,7 +67,7 @@ void Worker::exec(SearchModel& search_model)
 	    			}
 	    		}
 	    		else if (it->first == "ram"){
-	    			if(laptops[i]->brand == it->second && selecte){
+	    			if(laptops[i]->ram == atoi(it->second.c_str()) && selecte){
 	    				// std::cout << "match" << std::endl;
 	    				selecte = true;
 	    			}else{
@@ -77,7 +77,7 @@ void Worker::exec(SearchModel& search_model)
 	    			}
 	    		}
 	    		else if (it->first == "price"){
-	    			if(laptops[i]->brand == it->second && selecte){
+	    			if(laptops[i]->price == atoi(it->second.c_str()) && selecte){
 	    				// std::cout << "match" << std::endl;
 	    				selecte = true;
 	    			}else{

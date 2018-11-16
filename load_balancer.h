@@ -25,9 +25,11 @@ private:
 	std::vector<int> starts;
 	std::vector<Worker*> workers;
 	int step;
+	int presenter_pid;
 	int start_file;
 	int prc_cnt;
 	std::string dir;
+	std::string file;
 	SearchModel search_model;
 	SortModel sort_model;
 	Presenter presenter;
