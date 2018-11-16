@@ -22,6 +22,7 @@ private:
 	std::vector<int*> pipes;
 	std::vector<std::string> fifos;
 	std::vector<std::string*> files;
+	std::vector<std::string*>* items;
 	std::vector<int> starts;
 	std::vector<Worker*> workers;
 	int step;
@@ -34,5 +35,6 @@ private:
 
 	void extract_files_data_in_dir();
 	void extract_input_data(std::string input);
+	void extract_header(std::string str);
 };
 #endif

@@ -10,6 +10,7 @@
 LoadBalancer::LoadBalancer(std::string input)
 {
 	extract_input_data(input);
+	items = new std::vector<std::string*>;
 	// prc_cnt = prc_cnt_input;
 	// dir = dir_input;
 	step = 1;
@@ -118,8 +119,30 @@ void LoadBalancer::extract_files_data_in_dir()
 	//std::cout << "step : " << step << std::endl;
 }
 
+void LoadBalancer::extract_header(std::string str)
+{
+	std::string temp;
+	for (int i = 0; i < 26; ++i)
+	{
+		if (str[i] == ' ' || str[i] == '\n')
+		{
+			items->push_back(new std::string(temp));
+			if (str[i] == '\n')
+				break;
+			temp = "";
+			continue;
+		}
+		temp.push_back(str[i]);
+	}
+	for (int i = 0; i < items->size(); ++i)
+	{
+		std::cout << *(*items)[i] << std::endl;
+	}
+}
+
 void LoadBalancer::run()
 {
+	bool header_ext = false;
 	extract_files_data_in_dir();
 	int root = getpid();
 	for (int i = 0; i < prc_cnt; ++i)
@@ -140,6 +163,11 @@ void LoadBalancer::run()
 				std::ifstream t(*files[j]);
 				std::string str((std::istreambuf_iterator<char>(t)),
 	                 std::istreambuf_iterator<char>());
+				if (header_ext == false)
+				{
+					extract_header(str);
+					header_ext = true;
+				}
 				std::string temp (&str[26]);
 				res += temp + "\n";
 				//std::string s = "forgeeks.org";
@@ -160,7 +188,7 @@ void LoadBalancer::run()
 			std::string input = std::string(concat_str);
 			//std::cout << input << std::endl;
 			workers[i]->set_input(input, fifos[i]);
-			workers[i]->exec(search_model);
+			workers[i]->exec(search_model, items);
 			exit(0);
 		}
 	}
